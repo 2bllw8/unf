@@ -1,0 +1,37 @@
+/*
+ * SPDX-FileCopyrightText: 2025 2bllw8
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+plugins {
+  id("java-library")
+}
+
+group = "cc.chokoka.unf"
+version = "0.0.1"
+
+repositories {
+  mavenCentral()
+}
+
+java {
+  withJavadocJar()
+  withSourcesJar()
+
+  toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+}
+
+jar {
+  manifest {
+    attributes([
+        "Implementation-Title"  : project.name,
+        "Implementation-Version": archiveVersion,
+    ])
+  }
+}
+
+compileJava {
+  options.compilerArgs << "-Xlint:all"
+  options.encoding = "UTF-8"
+}

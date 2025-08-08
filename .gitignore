@@ -1,0 +1,20 @@
+# Eclipse / VSCode
+*.class
+.project
+.settings
+.classpath
+/.vscode
+
+# Idea
+*.iml
+/.idea
+
+# Gradle
+.gradle
+build
+
+# Other
+*.key
+*~
+.DS_Store
+/.local

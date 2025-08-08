@@ -1,0 +1,66 @@
+/*
+ * SPDX-FileCopyrightText: 2025 2bllw8
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+plugins {
+  id("maven-publish")
+  id("signing")
+}
+
+publishing {
+  repositories {
+    maven {
+      name = "Central"
+      url = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+      credentials {
+        username = findProperty("mavenUsername")
+        password = findProperty("mavenToken")
+      }
+    }
+  }
+
+  publications {
+    maven(MavenPublication) {
+      artifactId = project.name
+      groupId = project.group
+
+      from(components.java)
+
+      pom {
+        name = "unF - ${project.name}"
+        url = "https://github.com/2bllw8/unf"
+        licenses {
+          license {
+            name = "BSD-3-Clause"
+            url = "https://opensource.org/license/BSD-3-Clause"
+          }
+        }
+
+        developers {
+          developer {
+            id = "2bllw8"
+            email = "2bllw8@chokoka.cc"
+          }
+        }
+
+        scm {
+          connection = "scm:git:git://github.com/2bllw8/unf.git"
+          developerConnection = "scm:git:git://github.com/2bllw8/unf.git"
+          url = "https://github.com/2bllw7/unf/tree/main"
+        }
+      }
+    }
+  }
+}
+
+signing {
+  final String signingKeyPath = findProperty("secretKeyFile")
+  final String signingPassword = findProperty("secretKeyPassword")
+  final File signingKeyFile = file("${rootProject.rootDir.absolutePath}/${signingKeyPath}")
+  if (signingKeyFile.exists()) {
+    useInMemoryPgpKeys(signingKeyFile.text, signingPassword)
+    sign(publishing.publications.maven)
+  }
+}

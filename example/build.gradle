@@ -1,0 +1,31 @@
+/*
+ * SPDX-FileCopyrightText: 2025 2bllw8
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+plugins {
+  id("application")
+  id("quality-conventions")
+}
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  annotationProcessor(project(":processor"))
+  implementation(project(":lib"))
+}
+
+application {
+  mainClass = "example.Application"
+}
+
+java {
+  toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+}
+
+tasks.withType(JavaExec).configureEach {
+  enableAssertions = true
+}

@@ -1,0 +1,23 @@
+/*
+ * SPDX-FileCopyrightText: 2025 2bllw8
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+plugins {
+  id("lib-conventions")
+  id("publish-conventions")
+  id("quality-conventions")
+}
+
+dependencies {
+  testImplementation(libs.junit)
+}
+
+javadoc {
+  configure(options) {
+    memberLevel = JavadocMemberLevel.PROTECTED
+    addBooleanOption("html5", true)
+    addStringOption("Xdoclint:all,-missing", "-quiet")
+  }
+}

@@ -1,0 +1,11 @@
+/*
+ * SPDX-FileCopyrightText: 2025 2bllw8
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+plugins {
+  id("lib-conventions")
+  id("publish-conventions")
+  id("quality-conventions")
+}

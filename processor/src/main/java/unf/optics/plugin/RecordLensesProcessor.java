@@ -30,6 +30,16 @@ import javax.tools.JavaFileObject;
 @SupportedSourceVersion(SourceVersion.RELEASE_21)
 public final class RecordLensesProcessor extends AbstractProcessor {
 
+  /**
+   * The default constructor.
+   *
+   * <p>This is used by the service loader.
+   */
+  @SuppressWarnings("PMD.UnnecessaryConstructor")
+  public RecordLensesProcessor() {
+    super();
+  }
+
   @Override
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     return annotations.stream()

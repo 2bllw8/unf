@@ -23,7 +23,7 @@ publishing {
 
   publications {
     maven(MavenPublication) {
-      artifactId = project.name
+      artifactId = "unf.${project.name}"
       groupId = project.group
 
       from(components.java)
@@ -48,7 +48,7 @@ publishing {
         scm {
           connection = "scm:git:git://github.com/2bllw8/unf.git"
           developerConnection = "scm:git:git://github.com/2bllw8/unf.git"
-          url = "https://github.com/2bllw7/unf/tree/main"
+          url = "https://github.com/2bllw8/unf/tree/main"
         }
       }
     }
@@ -56,11 +56,8 @@ publishing {
 }
 
 signing {
-  final String signingKeyPath = findProperty("secretKeyFile")
-  final String signingPassword = findProperty("secretKeyPassword")
-  final File signingKeyFile = file("${rootProject.rootDir.absolutePath}/${signingKeyPath}")
-  if (signingKeyFile.exists()) {
-    useInMemoryPgpKeys(signingKeyFile.text, signingPassword)
-    sign(publishing.publications.maven)
-  }
+  final String signingKey = findProperty("signingKey")
+  final String signingKeyPassword = findProperty("signingKeyPassword")
+  useInMemoryPgpKeys(signingKey, signingKeyPassword)
+  sign(publishing.publications.maven)
 }

@@ -8,8 +8,8 @@ plugins {
   id("java-library")
 }
 
-group = "cc.chokoka.unf"
-version = "0.0.1"
+group = "cc.chokoka"
+version = "1.0.0"
 
 repositories {
   mavenCentral()

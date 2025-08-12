@@ -18,6 +18,8 @@ import unf.maybe.Maybe;
 @FunctionalInterface
 public interface Getter<S, A> extends AffineFold<S, A> {
 
+  /* https://hackage.haskell.org/package/optics-core-0.4/docs/Optics-Getter.html */
+
   /**
    * View the value pointed to by a getter.
    */

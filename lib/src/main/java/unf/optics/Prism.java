@@ -25,6 +25,8 @@ import unf.maybe.Maybe;
 public interface Prism<S, T, A, B>
     extends AffineTraversal<S, T, A, B>, Review<T, B> {
 
+  /* https://hackage.haskell.org/package/optics-core-0.4/docs/Optics-Prism.html */
+
   @Override
   default <R> R foldMap(R neutralElement, Function2<R, R, R> reducer, Function1<A, R> map, S source) {
     return getOrModify(source).fold($ -> neutralElement, map);

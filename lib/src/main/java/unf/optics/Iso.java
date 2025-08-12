@@ -21,6 +21,8 @@ import unf.function.Function2;
 public interface Iso<S, T, A, B>
     extends Lens<S, T, A, B>, Prism<S, T, A, B>, Review<T, B> {
 
+  /* https://hackage.haskell.org/package/optics-core-0.4/docs/Optics-Iso.html */
+
   @Override
   default <R> R foldMap(R neutralElement, Function2<R, R, R> reducer, Function1<A, R> map, S source) {
     return getOrModify(source).fold($ -> neutralElement, map);

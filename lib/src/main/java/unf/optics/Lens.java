@@ -24,6 +24,8 @@ import unf.function.Function2;
 public interface Lens<S, T, A, B>
     extends AffineTraversal<S, T, A, B>, Getter<S, A> {
 
+  /* https://hackage.haskell.org/package/optics-core-0.4/docs/Optics-Lens.html */
+
   @Override
   T over(Function1<A, B> lift, S source);
 

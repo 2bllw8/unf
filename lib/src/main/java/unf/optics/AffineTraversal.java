@@ -25,6 +25,7 @@ import unf.maybe.Maybe;
 public interface AffineTraversal<S, T, A, B>
     extends AffineFold<S, A>, Traversal<S, T, A, B> {
 
+  /* https://hackage.haskell.org/package/optics-core-0.4/docs/Optics-AffineTraversal.html */
 
   /**
    * Get the target or return the original value while allowing for the type to

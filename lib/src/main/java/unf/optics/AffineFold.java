@@ -22,6 +22,8 @@ import unf.maybe.Nothing;
 @FunctionalInterface
 public interface AffineFold<S, A> extends Fold<S, A> {
 
+  /* https://hackage.haskell.org/package/optics-core-0.4/docs/Optics-AffineFold.html */
+
   /**
    * Retrieve the targeted value.
    */

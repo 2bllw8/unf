@@ -24,6 +24,8 @@ import unf.function.Function1;
 @FunctionalInterface
 public interface Setter<S, T, A, B> {
 
+  /* https://hackage.haskell.org/package/optics-core-0.4/docs/Optics-Setter.html */
+
   /**
    * Apply a setter as a modifier.
    */

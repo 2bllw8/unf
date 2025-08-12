@@ -21,6 +21,8 @@ import unf.function.Function2;
  */
 public interface Fold<S, A> {
 
+  /* https://hackage.haskell.org/package/optics-core-0.4/docs/Optics-Fold.html */
+
   /**
    * Map each target to {@code R} and fold the results.
    */

@@ -22,6 +22,8 @@ import unf.function.Function2;
  */
 public interface Traversal<S, T, A, B> extends Fold<S, A>, Setter<S, T, A, B> {
 
+  /* https://hackage.haskell.org/package/optics-core-0.4/docs/Optics-Traversal.html */
+
   /**
    * Combine with another Traversal.
    */

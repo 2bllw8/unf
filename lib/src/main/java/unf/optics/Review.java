@@ -15,6 +15,8 @@ package unf.optics;
 @FunctionalInterface
 public interface Review<T, B> {
 
+  /* https://hackage.haskell.org/package/optics-core-0.4/docs/Optics-Review.html */
+
   /*
    * Note on the lack of a Review#focus(Review) method.
    *

@@ -32,6 +32,8 @@ jar {
 }
 
 compileJava {
-  options.compilerArgs << "-Xlint:all"
-  options.encoding = "UTF-8"
+  configure(options) {
+    compilerArgs << "-Xlint:all"
+    encoding = "UTF-8"
+  }
 }

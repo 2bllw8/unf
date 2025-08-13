@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-package example.optics;
+package unf.test.optics;
 
 import java.lang.annotation.Annotation;
 import java.util.List;

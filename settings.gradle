@@ -6,6 +6,5 @@
 
 rootProject.name = "unf"
 
-include("example")
 include("lib")
 include("processor")

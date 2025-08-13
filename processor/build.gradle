@@ -9,3 +9,9 @@ plugins {
   id("publish-conventions")
   id("quality-conventions")
 }
+
+dependencies {
+  testImplementation(libs.junit)
+  testImplementation(project(":lib"))
+  testAnnotationProcessor(project(":processor"))
+}

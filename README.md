@@ -42,4 +42,3 @@ Test:
 - `lib`: main module, the library itself.
 - `plugin`: annotation processor that enables automatic generation of `Lens`
   instances for `record` classes.
-- `example`: exemplar usage of the library

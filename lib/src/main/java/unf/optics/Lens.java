@@ -30,13 +30,13 @@ public interface Lens<S, T, A, B>
   T over(Function1<A, B> lift, S source);
 
   @Override
-  default Either<T, A> getOrModify(S source) {
+  default Either<T, A> matching(S source) {
     return new Right<>(view(source));
   }
 
   @Override
   default <R> R foldMap(R neutralElement, Function2<R, R, R> reducer, Function1<A, R> map, S source) {
-    return getOrModify(source).fold($ -> neutralElement, map);
+    return matching(source).fold($ -> neutralElement, map);
   }
 
   @Override

@@ -29,12 +29,12 @@ public interface Prism<S, T, A, B>
 
   @Override
   default <R> R foldMap(R neutralElement, Function2<R, R, R> reducer, Function1<A, R> map, S source) {
-    return getOrModify(source).fold($ -> neutralElement, map);
+    return matching(source).fold($ -> neutralElement, map);
   }
 
   @Override
   default T over(Function1<A, B> lift, S source) {
-    return getOrModify(source).fold(Function1.identity(),
+    return matching(source).fold(Function1.identity(),
         r -> review(lift.apply(r)));
   }
 
@@ -49,10 +49,10 @@ public interface Prism<S, T, A, B>
   default <A2, B2> Prism<S, T, A2, B2> focus(Prism<A, B, A2, B2> other) {
     return new Prism<>() {
       @Override
-      public Either<T, A2> getOrModify(S source) {
-        return Prism.this.getOrModify(source).fold(
+      public Either<T, A2> matching(S source) {
+        return Prism.this.matching(source).fold(
             Left::new,
-            a -> other.getOrModify(a).fold(
+            a -> other.matching(a).fold(
                 b -> new Left<>(Prism.this.set(b, source)),
                 Right::new
             )

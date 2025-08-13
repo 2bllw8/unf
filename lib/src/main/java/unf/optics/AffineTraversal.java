@@ -28,17 +28,17 @@ public interface AffineTraversal<S, T, A, B>
   /* https://hackage.haskell.org/package/optics-core-0.4/docs/Optics-AffineTraversal.html */
 
   /**
-   * Get the target or return the original value while allowing for the type to
-   * change if it does not match.
+   * Retrieve the targeted value or return the original value while allowing the
+   * type to change if it does not match.
    */
-  Either<T, A> getOrModify(S source);
+  Either<T, A> matching(S source);
 
   @Override
   T set(B value, S source);
 
   @Override
   default T over(Function1<A, B> lift, S source) {
-    return getOrModify(source).fold(
+    return matching(source).fold(
         Function1.identity(),
         r -> set(lift.apply(r), source)
     );
@@ -51,17 +51,17 @@ public interface AffineTraversal<S, T, A, B>
     return new AffineTraversal<>() {
       @Override
       public T set(B2 value, S source) {
-        return AffineTraversal.this.getOrModify(source).fold(
+        return AffineTraversal.this.matching(source).fold(
             Function1.identity(),
             a -> AffineTraversal.this.set(other.set(value, a), source)
         );
       }
 
       @Override
-      public Either<T, A2> getOrModify(S source) {
-        return AffineTraversal.this.getOrModify(source).fold(
+      public Either<T, A2> matching(S source) {
+        return AffineTraversal.this.matching(source).fold(
             Left::new,
-            a -> other.getOrModify(a).fold(
+            a -> other.matching(a).fold(
                 b -> new Left<>(AffineTraversal.this.set(b, source)),
                 Right::new
             )

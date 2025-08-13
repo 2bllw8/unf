@@ -15,13 +15,12 @@ import unf.maybe.Just;
 import unf.maybe.Maybe;
 import unf.maybe.Nothing;
 
-
 public final class PrismTest {
 
   private static final Prism<Maybe<String>, Maybe<String>, String, String>
-      JUST_PRISM = new Prism<>() {
+      PRISM_JUST = new Prism<>() {
     @Override
-    public Either<Maybe<String>, String> getOrModify(Maybe<String> source) {
+    public Either<Maybe<String>, String> matching(Maybe<String> source) {
       return source.fold(Right::new, () -> new Left<>(source));
     }
 
@@ -37,9 +36,9 @@ public final class PrismTest {
   };
 
   private static final Prism<Either<String, Integer>, Either<String, Integer>, String, String>
-      LEFT_PRISM = new Prism<>() {
+      PRISM_LEFT = new Prism<>() {
     @Override
-    public Either<Either<String, Integer>, String> getOrModify(Either<String, Integer> source) {
+    public Either<Either<String, Integer>, String> matching(Either<String, Integer> source) {
       return source.fold(
           Right::new,
           r -> new Left<>(source)
@@ -59,17 +58,21 @@ public final class PrismTest {
 
   @Test
   public void maybeJustReviewJust() {
+    final String s = "◕ ◡ ◕";
+
     Assert.assertEquals(
-        new Just<>("Flower"),
-        JUST_PRISM.review("Flower")
+        new Just<>(s),
+        PRISM_JUST.review(s)
     );
   }
 
   @Test
   public void maybeJustPreviewJust() {
+    final String s = "●_●";
+
     Assert.assertEquals(
-        new Just<>("Bird"),
-        JUST_PRISM.preview(new Just<>("Bird"))
+        new Just<>(s),
+        PRISM_JUST.preview(new Just<>(s))
     );
   }
 
@@ -77,23 +80,27 @@ public final class PrismTest {
   public void maybeJustPreviewNothing() {
     Assert.assertEquals(
         new Nothing<>(),
-        JUST_PRISM.preview(new Nothing<>())
+        PRISM_JUST.preview(new Nothing<>())
     );
   }
 
   @Test
   public void eitherLeftReviewLeft() {
+    final String s = "(>_<)";
+
     Assert.assertEquals(
-        new Left<>("Hello"),
-        LEFT_PRISM.review("Hello")
+        new Left<>(s),
+        PRISM_LEFT.review(s)
     );
   }
 
   @Test
   public void eitherLeftPreviewLeft() {
+    final String s = "ʘ︵ʘ";
+
     Assert.assertEquals(
-        new Just<>("World"),
-        LEFT_PRISM.preview(new Left<>("World"))
+        new Just<>(s),
+        PRISM_LEFT.preview(new Left<>(s))
     );
   }
 
@@ -101,7 +108,7 @@ public final class PrismTest {
   public void eitherLeftPreviewRight() {
     Assert.assertEquals(
         new Nothing<>(),
-        LEFT_PRISM.preview(new Right<>(1))
+        PRISM_LEFT.preview(new Right<>(1))
     );
   }
 }

@@ -18,7 +18,12 @@ public interface Function1<A, B> {
 
   B apply(A p0);
 
-  default <C> Function1<A, C> compose(Function1<B, C> other) {
+
+  default <Z> Function1<Z, B> compose(Function1<? super Z, ? extends A> other) {
+    return a -> apply(other.apply(a));
+  }
+
+  default <C> Function1<A, C> then(Function1<? super B, ? extends C> other) {
     return p0 -> other.apply(apply(p0));
   }
 

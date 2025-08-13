@@ -1,7 +1,8 @@
 name: Javadoc GH Pages
 on:
-  release:
-    types: [ published ]
+  push:
+    tags:
+      - '*'
 permissions:
   pages: write
   id-token: write

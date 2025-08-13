@@ -9,11 +9,16 @@ plugins {
   id("signing")
 }
 
+java {
+  withJavadocJar()
+  withSourcesJar()
+}
+
 publishing {
   repositories {
     maven {
       name = "Central"
-      url = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+      url = "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/"
       credentials {
         username = findProperty("mavenUsername")
         password = findProperty("mavenToken")
@@ -30,6 +35,8 @@ publishing {
 
       pom {
         name = "unF - ${project.name}"
+        description = "Functional programming library for modern Java"
+
         url = "https://github.com/2bllw8/unf"
         licenses {
           license {

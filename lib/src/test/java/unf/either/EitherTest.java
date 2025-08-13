@@ -47,7 +47,7 @@ public final class EitherTest {
   }
 
   @Test
-  public void rightMapleft() {
+  public void rightMapLeft() {
     Assert.assertEquals(new Right<>(1), new Right<>(1).mapLeft($ -> 0));
   }
 

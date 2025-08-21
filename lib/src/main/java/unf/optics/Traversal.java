@@ -27,7 +27,7 @@ public interface Traversal<S, T, A, B> extends Fold<S, A>, Setter<S, T, A, B> {
   /**
    * Combine with another Traversal.
    */
-  default <A2, B2> Traversal<S, T, A2, B2> then(Traversal<A, B, A2, B2> other) {
+  default <A2, B2> Traversal<S, T, A2, B2> focus(Traversal<A, B, A2, B2> other) {
     return new Traversal<>() {
       @Override
       public <R> R foldMap(R neutralElement, Function2<R, R, R> reducer, Function1<A2, R> map, S source) {

@@ -33,7 +33,7 @@ public interface Getter<S, A> extends AffineFold<S, A> {
   /**
    * Combine this getter with another one.
    */
-  default <A2> Getter<S, A2> then(Getter<A, A2> other) {
+  default <A2> Getter<S, A2> focus(Getter<A, A2> other) {
     return source -> other.view(view(source));
   }
 }

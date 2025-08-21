@@ -11,6 +11,7 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 import unf.optics.Lens;
+import unf.optics.Traversal;
 
 public final class RecordLensTest {
 
@@ -45,6 +46,25 @@ public final class RecordLensTest {
     Assert.assertEquals(
         new PubRecord.InnerRecord(List.of()),
         lens.set(List.of(), rec)
+    );
+  }
+
+  @Test
+  public void listType() {
+    final Traversal<PubRecord.InnerRecord, PubRecord.InnerRecord, Lens<PubRecord.InnerRecord, PubRecord.InnerRecord, String, String>, String>
+        traversal = PubRecord$InnerRecordLenses.wordsElements;
+
+    final PubRecord.InnerRecord rec = new PubRecord.InnerRecord(
+        List.of("o.O", "^.^"));
+
+    Assert.assertEquals(
+        new PubRecord.InnerRecord(rec.words().stream()
+            .map(it -> "(" + it + ")")
+            .toList()),
+        traversal.over(
+            l -> "(" + l.view(rec) + ")",
+            rec
+        )
     );
   }
 }

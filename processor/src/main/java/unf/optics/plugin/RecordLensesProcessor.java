@@ -20,6 +20,8 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import javax.tools.JavaFileObject;
 
 /**
@@ -72,6 +74,8 @@ public final class RecordLensesProcessor extends AbstractProcessor {
   private boolean processRecord(TypeElement recordElement) {
     final Messager messager = processingEnv.getMessager();
     final Filer filer = processingEnv.getFiler();
+    final Elements elements = processingEnv.getElementUtils();
+    final Types types = processingEnv.getTypeUtils();
 
     final String packageName = getPackageName(recordElement);
     final String simpleName = getLensesSimpleName(recordElement, packageName);
@@ -81,7 +85,14 @@ public final class RecordLensesProcessor extends AbstractProcessor {
           packageName + "." + simpleName,
           recordElement
       );
-      LensesGenerator.generate(recordElement, genFile, packageName, simpleName);
+      LensesGenerator.generate(
+          elements,
+          types,
+          recordElement,
+          genFile,
+          packageName,
+          simpleName
+      );
       return true;
     } catch (IOException e) {
       messager.printError(e.getMessage(), recordElement);

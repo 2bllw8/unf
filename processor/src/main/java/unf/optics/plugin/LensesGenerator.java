@@ -8,18 +8,21 @@ package unf.optics.plugin;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.SequencedMap;
 import java.util.SequencedSet;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.type.UnknownTypeException;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.JavaFileObject;
@@ -38,58 +41,75 @@ final class LensesGenerator {
 
   private static final String TRAVERSAL_CLASS_NAME = "unf.optics.Traversal";
 
-  private static final Pattern IS_IN_BASE_PKG = Pattern.compile(
-      "^java\\.lang\\.\\w+$");
-
   private LensesGenerator() {
   }
 
   public static void generate(
       Elements elements,
       Types types,
-      TypeElement recordElement,
+      TypeElement targetRecordElement,
       JavaFileObject file,
-      String enclosingPackage,
-      String lensesClassName
+      String className
   ) throws IOException {
-    final SequencedMap<String, String> components
-        = buildComponentsNameTypeMapping(recordElement);
-    final SequencedMap<String, String> listComponents =
-        buildListComponentsNameTypeMapping(
-            elements,
-            types,
-            recordElement
-        );
+    final TypeMirror targetRecordType = targetRecordElement.asType();
+    final SequencedMap<String, TypeMirror> allComponents
+        = getRecordComponents(targetRecordElement);
+    final SequencedMap<String, TypeMirror> listComponents
+        = filterListComponents(elements, types, allComponents);
+    final SequencedSet<String> allComponentNames
+        = allComponents.sequencedKeySet();
 
-    final StringBuilder sb = new StringBuilder();
+    // Lenses for each component
+    final List<String> lensesDeclarations
+        = ComponentLensesGenerator.lensesForComponents(
+        types,
+        targetRecordType,
+        allComponents,
+        allComponentNames
+    );
 
-    final String sourceFullyQualifiedName = recordElement.getQualifiedName()
-        .toString();
-    classHeader(sb, enclosingPackage, sourceFullyQualifiedName);
+    // Traversals for components of type List
+    final List<String> traversalsDeclarations
+        = ComponentTraversalsGenerator.traversalsForComponents(
+        types,
+        targetRecordType,
+        listComponents,
+        allComponentNames
+    );
+
+    // All types that are used in the implementation of this class
+    final SequencedSet<String> typesToImport = getUsedTypes(
+        types,
+        targetRecordType,
+        allComponents.values()
+    );
 
     // "protected" is semantically equivalent to package-private (no visibility
     // modifier) for record classes because they cannot be extended: we only
     // care about whether the record is public or not and we want our *Lenses
     // class to match that
-    final boolean isPublic = recordElement.getModifiers()
+    final boolean isPublic = targetRecordElement.getModifiers()
         .contains(Modifier.PUBLIC);
-    final String sourceUnqualifiedName = recordElement.getSimpleName()
-        .toString();
-    classDefinition(
-        sb,
-        lensesClassName,
-        isPublic,
-        sourceUnqualifiedName,
-        components,
-        listComponents
-    );
 
+    // Write file
     try (Writer writer = file.openWriter()) {
-      writer.write(sb.toString());
+      writeClassFile(
+          writer,
+          elements.getPackageOf(targetRecordElement),
+          typesToImport,
+          className,
+          isPublic,
+          lensesDeclarations,
+          traversalsDeclarations
+      );
     }
   }
 
-  private static SequencedMap<String, String> buildComponentsNameTypeMapping(
+  /**
+   * Get a mapping from name to {@link TypeMirror} of all components of a given
+   * record.
+   */
+  private static SequencedMap<String, TypeMirror> getRecordComponents(
       TypeElement recordElement
   ) {
     return recordElement.getRecordComponents()
@@ -101,10 +121,8 @@ final class LensesGenerator {
             //         cannot reliably determine whether a "segment" of the
             //         fully qualified name corresponds to a package or an
             //         outer class.
-            rce -> formatType(rce.getAccessor().getReturnType()),
-            (a, b) -> {
-              throw new IllegalStateException("Duplicate components?");
-            },
+            rce -> rce.getAccessor().getReturnType(),
+            LensesGenerator::noDuplicateKeys,
             // Order matters because TypeElement#getRecordComponents provides
             // record components in the order used by the default record
             // constructor
@@ -112,270 +130,126 @@ final class LensesGenerator {
         ));
   }
 
-  private static SequencedMap<String, String>
-  buildListComponentsNameTypeMapping(
+  /**
+   * Filter the given mapping from name to {@link TypeMirror} of record
+   * components to only those that are of type {@link List}.
+   */
+  private static SequencedMap<String, TypeMirror> filterListComponents(
       Elements elements,
       Types types,
-      TypeElement recordElement
+      SequencedMap<String, TypeMirror> allComponents
   ) {
     // Need to erase, otherwise a type like List<String> would not be
     // considered assignable to it.
     final TypeMirror listTypeMirror = types.erasure(
         elements.getTypeElement(List.class.getTypeName()).asType()
     );
-    return recordElement.getRecordComponents()
+    return allComponents.sequencedEntrySet()
         .stream()
-        .filter(rce -> listTypeMirror.equals(
-            types.erasure(rce.getAccessor().getReturnType())
-        ))
+        .filter(e -> listTypeMirror.equals(types.erasure(e.getValue())))
         .collect(Collectors.toMap(
-            rce -> rce.getSimpleName().toString(),
-            rce -> formatType(
-                getFirstTypeParameter(rce.getAccessor().getReturnType())
-            ),
-            (a, b) -> {
-              throw new IllegalStateException("Duplicate components?");
-            },
-            // Order matters because TypeElement#getRecordComponents provides
-            // record components in the order used by the default record
-            // constructor
+            Map.Entry::getKey,
+            Map.Entry::getValue,
+            LensesGenerator::noDuplicateKeys,
             LinkedHashMap::new
         ));
   }
 
-  private static void classHeader(
-      StringBuilder sb,
-      String enclosingPackage,
-      String fullyQualifiedName
-  ) {
-    // package ${enclosingPackage};
-    packageStatement(sb, enclosingPackage);
-
-    sb.append('\n');
-
-    // import ${FUNCTION_1_CLASS_NAME};
-    importStatement(sb, FUNCTION_1_CLASS_NAME);
-    // import ${FUNCTION_2_CLASS_NAME};
-    importStatement(sb, FUNCTION_2_CLASS_NAME);
-    // import ${LENS_CLASS_NAME};
-    importStatement(sb, LENS_CLASS_NAME);
-    // import ${TRAVERSAL_CLASS_NAME};
-    importStatement(sb, TRAVERSAL_CLASS_NAME);
-    // import ${fullyQualifiedName};
-    importStatement(sb, fullyQualifiedName);
-    // import java.util.List;
-    importStatement(sb, List.class.getName());
-
-    sb.append('\n');
+  /**
+   * Throw an {@link IllegalStateException} when handling two entries of a map
+   * with the same key.
+   */
+  private static <T> T noDuplicateKeys(T ignoredA, T ignoredB) {
+    throw new IllegalStateException("Duplicate elements are not allowed");
   }
 
-  private static void classDefinition(
-      StringBuilder sb,
+  private static SequencedSet<String> getUsedTypes(
+      Types types,
+      TypeMirror targetRecordType,
+      Collection<TypeMirror> componentTypes
+  ) {
+    final boolean hasListComponent = componentTypes.stream()
+        .anyMatch(t -> t.toString().startsWith(List.class.getName()));
+    final SequencedSet<String> usedTypes = new LinkedHashSet<>();
+
+    // Function types
+    usedTypes.add(FUNCTION_1_CLASS_NAME);
+    if (hasListComponent) {
+      usedTypes.add(FUNCTION_2_CLASS_NAME);
+    }
+
+    // Optic types
+    usedTypes.add(LENS_CLASS_NAME);
+    if (hasListComponent) {
+      usedTypes.add(TRAVERSAL_CLASS_NAME);
+      usedTypes.add(IntStream.class.getName());
+    }
+
+    // Record types
+    usedTypes.add(targetRecordType.toString());
+    componentTypes.stream()
+        // Skip primitives
+        .filter(t -> !(t instanceof PrimitiveType))
+        // Erase type parameters
+        .map(types::erasure)
+        .forEach(t -> usedTypes.add(t.toString()));
+
+    return Collections.unmodifiableSequencedSet(usedTypes);
+  }
+
+  private static void writeClassFile(
+      Writer writer,
+      PackageElement packageElement,
+      SequencedSet<String> typesToImport,
       String className,
       boolean isPublic,
-      String sourceName,
-      SequencedMap<String, String> components,
-      SequencedMap<String, String> listComponents
-  ) {
-    // Needs to be ordered to match the record constructor
-    final SequencedSet<String> componentNames = components.sequencedKeySet();
+      List<String> lensesDeclarations,
+      List<String> traversalsDeclarations
+  ) throws IOException {
+    // Package statement
+    writer.append("package ")
+        .append(packageElement.toString())
+        .append(";\n\n");
 
-    // [public] final class ${className}Lenses {
-    classDefinitionOpening(sb, className, isPublic);
-
-    //   public static final Lens<...> ... = ...;
-    components.forEach((name, type) ->
-        lensField(sb, name, type, sourceName, componentNames));
-
-    // public static final Traversal<...> ...Elements = ....;
-    listComponents.forEach((name, types) ->
-        traversalField(sb, name, types, sourceName, componentNames));
-
-    if (!listComponents.isEmpty()) {
-      // private static <T> Lens<List<T>, List<T>, T, T> lensAtIndex(int i)...
-      lensAtIndex(sb);
+    // Imports
+    for (final String type : typesToImport) {
+      writer.append("import ")
+          .append(type)
+          .append(";\n");
     }
+    writer.append('\n');
 
-    // }
-    sb.append("}\n");
-  }
-
-  private static void packageStatement(StringBuilder sb, String packageName) {
-    sb.append("package ")
-        .append(packageName)
-        .append(";\n");
-  }
-
-  private static void importStatement(StringBuilder sb, String nameToImport) {
-    sb.append("import ")
-        .append(nameToImport)
-        .append(";\n");
-  }
-
-  private static void classDefinitionOpening(
-      StringBuilder sb,
-      String className,
-      boolean isPublic
-  ) {
+    // Class declaration statement
     if (isPublic) {
-      sb.append("public ");
+      writer.append("public ");
     }
-    sb.append("final class ")
+    writer.append("final class ")
         .append(className)
-        .append(" {\n\n")
-        .append("  private ")
+        .append(" {\n\n");
+
+    // Private default constructor
+    writer.append("  private ")
         .append(className)
         .append("() {\n  }\n");
-  }
 
-  private static void lensField(
-      StringBuilder sb,
-      String targetName,
-      String targetType,
-      String sourceType,
-      SequencedSet<String> componentNames
-  ) {
-    final String overNewInstanceArguments = componentNames.stream()
-        .map(compName -> {
-          final String accessorInvocation = "source." + compName + "()";
-          return compName.equals(targetName)
-              ? "lift.apply(" + accessorInvocation + ")"
-              : accessorInvocation;
-        })
-        .collect(Collectors.joining(", "));
-    sb.append("\n");
-    sb.append(String.format("""
-              public static final Lens<%1$s, %1$s, %2$s, %2$s> %3$s = new Lens<>() {
-                @Override
-                public %2$s view(%1$s source) {
-                  return source.%3$s();
-                }
+    // Lenses fields
+    for (final String lensDeclaration : lensesDeclarations) {
+      writer.append('\n')
+          .append(lensDeclaration);
+    }
 
-                @Override
-                public %1$s over(Function1<%2$s, %2$s> lift, %1$s source) {
-                  return new %1$s(%4$s);
-                }
-              };
-            """, // Lower indentation on purpose!
-        sourceType,              // 1: S, T
-        targetType,              // 2: A, B
-        targetName,              // 3: target component name
-        overNewInstanceArguments // 4: Arguments for the new instance in over
-    ));
-  }
+    // Traversals fields
+    if (!traversalsDeclarations.isEmpty()) {
+      for (final String traversalDeclaration : traversalsDeclarations) {
+        writer.append('\n')
+            .append(traversalDeclaration);
+      }
 
-  private static void traversalField(
-      StringBuilder sb,
-      String targetName,
-      String elementType,
-      String sourceType,
-      SequencedSet<String> componentNames
-  ) {
-    final String overNewInstanceArguments = componentNames.stream()
-        .map(compName -> {
-          final String accessorInvocation = "source." + compName + "()";
-          return compName.equals(targetName)
-              ? "newValue"
-              : accessorInvocation;
-        })
-        .collect(Collectors.joining(", "));
-    sb.append("\n");
-    sb.append(String.format("""
-              public static final Traversal<%1$s, %1$s, Lens<%1$s, %1$s, %2$s, %2$s>, %2$s> %3$sElements = new Traversal<>() {
-                @Override
-                public %1$s over(Function1<Lens<%1$s, %1$s, %2$s, %2$s>, %2$s> lift,
-                                 %1$s source) {
-                  final List<%2$s> oldValue = source.%3$s();
-                  final List<%2$s> newValue = java.util.stream.IntStream.range(0, oldValue.size())
-                      .mapToObj(i -> lift.apply(%3$s.focus(lensAtIndex(i))))
-                      .toList();
-                  return new %1$s(%4$s);
-                }
+      // Traversal helper method
+      writer.append('\n')
+          .write(ComponentTraversalsGenerator.getMethodLensAtIndexImpl());
+    }
 
-                @Override
-                public <R> R foldMap(R neutralElement,
-                                     Function2<R, R, R> reducer,
-                                     Function1<Lens<%1$s, %1$s, %2$s, %2$s>, R> map,
-                                     %1$s source) {
-                  R result = neutralElement;
-                  final int n = source.%3$s().size();
-                  int i = 0;
-                  while (i < n) {
-                    result = reducer.apply(result, map.apply(%3$s.focus(lensAtIndex(i))));
-                    i++;
-                  }
-                  return result;
-                }
-              };
-            """, // Lower indentation on purpose!
-        sourceType,              // 1: S, T
-        elementType,             // 2. A, B
-        targetName,              // 3: target component name
-        overNewInstanceArguments // 4: Arguments for the new instance in over
-    ));
-  }
-
-  private static void lensAtIndex(StringBuilder sb) {
-    sb.append("\n");
-    sb.append("""
-          private static <T> Lens<List<T>, List<T>, T, T> lensAtIndex(int idx) {
-            return new Lens<>() {
-              @Override
-              public List<T> over(Function1<T, T> lift, List<T> source) {
-                return java.util.stream.IntStream.range(0, source.size())
-                  .mapToObj(i -> i == idx
-                      ? lift.apply(source.get(i))
-                      : source.get(i))
-                   .toList();
-              }
-
-              @Override
-              public T view(List<T> source) {
-                return source.get(idx);
-              }
-            };
-          }
-        """); // Lower indentation on purpose!
-  }
-
-  /**
-   * Get the {@link TypeMirror} of the first type parameter of the give
-   * {@link TypeMirror}.
-   */
-  private static TypeMirror getFirstTypeParameter(TypeMirror listTypeMirror) {
-    return Optional.of(listTypeMirror)
-        // Safely cast to DeclaredType
-        .filter(DeclaredType.class::isInstance)
-        .map(DeclaredType.class::cast)
-        // Get the only type parameter of List to figure out the type
-        // of the elements of the list
-        .map(DeclaredType::getTypeArguments)
-        .flatMap(args -> args.isEmpty()
-            ? Optional.empty()
-            : Optional.of(args.getFirst()))
-        .orElseThrow(() -> new UnknownTypeException(
-            listTypeMirror,
-            "Cannot determine type of the elements of " + listTypeMirror
-        ));
-  }
-
-  /**
-   * Return boxed version of the given type, if it's a primitive, or the type
-   * itself.
-   */
-  private static String formatType(TypeMirror type) {
-    return switch (type.toString()) {
-      case "boolean" -> "Boolean";
-      case "byte" -> "Byte";
-      case "short" -> "Short";
-      case "char" -> "Character";
-      case "int" -> "Integer";
-      case "long" -> "Long";
-      case "float" -> "Float";
-      case "double" -> "Double";
-      // Remove "java.lang." prefix (first 10 chars)
-      case String s when IS_IN_BASE_PKG.matcher(s).matches() -> s.substring(10);
-      default -> type.toString();
-    };
+    writer.write("}\n");
   }
 }

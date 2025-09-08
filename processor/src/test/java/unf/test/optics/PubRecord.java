@@ -8,12 +8,12 @@ package unf.test.optics;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
-import unf.optics.RecordLenses;
+import unf.optics.RecordOptics;
 
-@RecordLenses
+@RecordOptics
 public record PubRecord(int a, Double b, Annotation an) {
 
-  @RecordLenses
+  @RecordOptics
   protected record InnerRecord(List<String> words) {
   }
 }

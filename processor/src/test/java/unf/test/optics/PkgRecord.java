@@ -6,9 +6,9 @@
 
 package unf.test.optics;
 
-import unf.optics.RecordLenses;
+import unf.optics.RecordOptics;
 
-@RecordLenses
+@RecordOptics
 record PkgRecord(PubRecord pr) {
 
 }

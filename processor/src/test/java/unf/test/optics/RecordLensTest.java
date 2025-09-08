@@ -17,8 +17,8 @@ public final class RecordLensTest {
 
   @Test
   public void composedLens() {
-    final Lens<PkgRecord, PkgRecord, Integer, Integer> lens = PkgRecordLenses.pr
-        .focus(PubRecordLenses.a);
+    final Lens<PkgRecord, PkgRecord, Integer, Integer> lens = PkgRecordOptics.pr
+        .focus(PubRecordOptics.a);
     final PkgRecord rec = new PkgRecord(new PubRecord(0,
         0.1,
         () -> Annotation.class));
@@ -36,7 +36,7 @@ public final class RecordLensTest {
   @Test
   public void parametricType() {
     final Lens<PubRecord.InnerRecord, PubRecord.InnerRecord, List<String>, List<String>>
-        lens = PubRecord$InnerRecordLenses.words;
+        lens = PubRecord$InnerRecordOptics.words;
     final PubRecord.InnerRecord rec = new PubRecord.InnerRecord(List.of("hi"));
 
     Assert.assertEquals(
@@ -52,7 +52,7 @@ public final class RecordLensTest {
   @Test
   public void listType() {
     final Traversal<PubRecord.InnerRecord, PubRecord.InnerRecord, Lens<PubRecord.InnerRecord, PubRecord.InnerRecord, String, String>, String>
-        traversal = PubRecord$InnerRecordLenses.wordsElements;
+        traversal = PubRecord$InnerRecordOptics.wordsElements;
 
     final PubRecord.InnerRecord rec = new PubRecord.InnerRecord(
         List.of("o.O", "^.^"));

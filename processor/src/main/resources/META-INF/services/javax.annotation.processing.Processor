@@ -4,4 +4,4 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
-unf.optics.plugin.RecordLensesProcessor
+unf.optics.plugin.RecordOpticsProcessor

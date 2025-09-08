@@ -49,7 +49,7 @@ public final class Demo {
 
   public static void main(String[] args) {
     final Rec0 r = new Rec0(new Rec1(1, new Just<>("one")), true);
-    final Rec0 newR = Rec0Lenses.r.i.over(i -> i + 2, r);
+    final Rec0 newR = Rec0Optics.r.i.over(i -> i + 2, r);
 
     System.out.println(newR);
     // Rec0[r=Rec1[i=3, s="one"], b=true]

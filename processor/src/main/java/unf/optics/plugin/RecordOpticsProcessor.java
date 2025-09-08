@@ -29,12 +29,12 @@ import unf.optics.plugin.generator.OpticsGenerator;
 import unf.optics.plugin.generator.OpticsGeneratorFactory;
 
 /**
- * Annotation processor that produces lenses for each component of an annotated
+ * Annotation processor that produces optics for the components of an annotated
  * record class.
  */
-@SupportedAnnotationTypes("unf.optics.RecordLenses")
+@SupportedAnnotationTypes("unf.optics.RecordOptics")
 @SupportedSourceVersion(SourceVersion.RELEASE_21)
-public final class RecordLensesProcessor extends AbstractProcessor {
+public final class RecordOpticsProcessor extends AbstractProcessor {
 
   /**
    * The default constructor.
@@ -42,7 +42,7 @@ public final class RecordLensesProcessor extends AbstractProcessor {
    * <p>This is used by the service loader.
    */
   @SuppressWarnings("PMD.UnnecessaryConstructor")
-  public RecordLensesProcessor() {
+  public RecordOpticsProcessor() {
     super();
   }
 
@@ -192,7 +192,7 @@ public final class RecordLensesProcessor extends AbstractProcessor {
         .substring(packageName.length() + 1)
         // Replace the "." of inner classes with "$"
         .replace(".", "$");
-    return classNameWithEnclosing + "Lenses";
+    return classNameWithEnclosing + "Optics";
   }
 
   private void printSkipWarning(String reason, Element el) {

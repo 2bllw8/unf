@@ -31,18 +31,18 @@ dependencies {
 }
 ```
 
-### Demo: Record Lenses
+### Demo: Record Optics
 
 ```java
 import unf.maybe.Just;
 import unf.maybe.Maybe;
-import unf.optics.RecordLenses;
+import unf.optics.RecordOptics;
 
-@RecordLenses
+@RecordOptics
 record Rec1(int i, Maybe<String> s) {
 }
 
-@RecordLenses
+@RecordOptics
 record Rec0(Rec1 r, boolean b) {
 }
 
@@ -57,6 +57,10 @@ public final class Demo {
   }
 }
 ```
+
+## Changelog
+
+See the [CHANGELOG.md](./CHANGELOG.md) file.
 
 ## Development
 

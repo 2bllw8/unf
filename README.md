@@ -8,8 +8,9 @@ A functional programming library for modern Java (21+).
 ## Key features
 
 - **Optics**: a first-class, composable notion of substructure.
-  - With an optional annotation processor to automatically generate lenses for
-    record classes.
+  - Annotation Processor: automatically generate optics for record classes
+    - For each record component, generate a `Lens`
+    - For each record component of type `List`, also generate a `Traversal`
 - **Either** monad: represent values with two possibilities.
 - **Maybe** monad: encapsulate an optional value.
 - **Function** interfaces with partial application.
@@ -23,10 +24,10 @@ A functional programming library for modern Java (21+).
 ```groovy
 dependencies {
   // Core library
-  implementation "cc.chokoka:unf.lib:1.0.0"
+  implementation "cc.chokoka:unf.lib:2.0.0"
   // Optional annotation processor for automatic lens generation for record
   // classes
-  annotationProcessor "cc.chokoka:unf.processor:1.0.0"
+  annotationProcessor "cc.chokoka:unf.processor:2.0.0"
 }
 ```
 
